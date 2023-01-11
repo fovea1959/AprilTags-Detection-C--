@@ -72,6 +72,11 @@ class Robot : public frc::TimedRobot {
         continue;
       }
 
+      cv::cvtColor(mat, grayMat, cv::COLOR_BGR2GRAY);
+
+      cv::Size s = grayMat.size();
+      frc::AprilTagDetector::Results detections = detector.Detect (s.width, s.height, grayMat.data);
+
       // Put a rectangle on the image
       rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
                 cv::Scalar(255, 255, 255), 5);
