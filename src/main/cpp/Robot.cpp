@@ -5,7 +5,11 @@
 #include <cstdio>
 #include <thread>
 
+#include <units/length.h>
+
 #include <cameraserver/CameraServer.h>
+#include <frc/apriltag/AprilTagDetector.h>
+#include <frc/apriltag/AprilTagPoseEstimator.h>
 #include <frc/TimedRobot.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/types.hpp>
@@ -21,6 +25,18 @@ class Robot : public frc::TimedRobot {
 
  private:
   static void VisionThread() {
+    frc::AprilTagDetector detector;
+    // look for tag16h5, don't correct any error bits
+    detector.AddFamily("tag16h5", 0);
+
+    // Set up Pose Estimator - parameters are for a Microsoft Lifecam HD-3000
+    // (https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21)
+    auto tagSize = units::length::meter_t(0.1524);
+    frc::AprilTagPoseEstimator::Config postEstConfig =
+      { .tagSize = tagSize, .fx = 699.3778103158814, .fy = 677.7161226393544, .cx = 345.6059345433618, .cy = 207.12741326228522 };
+    //AprilTagPoseEstimator.Config poseEstConfig = new AprilTagPoseEstimator.Config(0.1524, 699.3778103158814, 677.7161226393544, 345.6059345433618, 207.12741326228522);
+    //AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(poseEstConfig);
+
     // Get the USB camera from CameraServer
     cs::UsbCamera camera = frc::CameraServer::StartAutomaticCapture();
     // Set the resolution
@@ -36,6 +52,11 @@ class Robot : public frc::TimedRobot {
     cv::Mat mat;
     cv::Mat grayMat;
 
+    // Instantiate once
+    // how to do ArrayList?
+    cv::Scalar outlineColor = cv::Scalar(0, 255, 0);
+    cv::Scalar crossColor = cv::Scalar(0, 0, 255);
+
     while (true) {
       // Tell the CvSink to grab a frame from the camera and
       // put it
@@ -48,6 +69,9 @@ class Robot : public frc::TimedRobot {
         continue;
       }
 
+      // Put a rectangle on the image
+      rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
+                cv::Scalar(255, 255, 255), 5);
       // Give the output stream a new image to display
       outputStream.PutFrame(mat);
     }
