@@ -31,12 +31,14 @@ class Robot : public frc::TimedRobot {
 
     // Set up Pose Estimator - parameters are for a Microsoft Lifecam HD-3000
     // (https://www.chiefdelphi.com/t/wpilib-apriltagdetector-sample-code/421411/21)
-    auto tagSize = units::length::inch_t(6.0);
-    frc::AprilTagPoseEstimator::Config poseEstConfig =
-      { .tagSize = tagSize, .fx = 699.3778103158814, .fy = 677.7161226393544, .cx = 345.6059345433618, .cy = 207.12741326228522 };
-    //AprilTagPoseEstimator.Config poseEstConfig = new AprilTagPoseEstimator.Config(0.1524, 699.3778103158814, 677.7161226393544, 345.6059345433618, 207.12741326228522);
+    frc::AprilTagPoseEstimator::Config poseEstConfig = {
+        .tagSize = units::length::inch_t(6.0),
+        .fx = 699.3778103158814,
+        .fy = 677.7161226393544,
+        .cx = 345.6059345433618,
+        .cy = 207.12741326228522
+        };
     frc::AprilTagPoseEstimator estimator = frc::AprilTagPoseEstimator(poseEstConfig);
-    //AprilTagPoseEstimator estimator = new AprilTagPoseEstimator(poseEstConfig);
 
     // Get the USB camera from CameraServer
     cs::UsbCamera camera = frc::CameraServer::StartAutomaticCapture();
