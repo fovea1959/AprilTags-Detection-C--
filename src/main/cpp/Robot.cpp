@@ -112,17 +112,20 @@ class Robot : public frc::TimedRobot {
         frc::Transform3d pose = estimator.Estimate(*detection);
 
         std::stringstream dashboardString;
-        dashboardString << "Translation: " << std::to_string(pose.X().value()) << "," << std::to_string(pose.Y().value()) << "," << std::to_string(pose.Z().value());
+        dashboardString << "Translation: " << pose.X().value() << "," << pose.Y().value() << "," << pose.Z().value();
         frc::Rotation3d rotation = pose.Rotation();
-        //dashboardString << "; Rotation: " << rotation.X()) << "," << std::to_string(rotation.Y()) << "," << std::to_string(rotation.Z());
-        // dashboardString << "; Rotation: " << rotation.X();
+        dashboardString << "; Rotation: " << rotation.X().value() << "," << rotation.Y().value() << "," << rotation.Z().value();
         frc::SmartDashboard::PutString("pose_" + std::to_string(detection->GetId()), dashboardString.str());
       }
 
       // put list of tags onto dashboard
       std::stringstream tags_s;
-      std::copy(tags.begin(), tags.end()-1, std::ostream_iterator<int>(tags_s, ","));
-      tags_s << tags.back();
+      if (tags.size() > 0) {
+        if (tags.size() > 1) {
+          std::copy(tags.begin(), tags.end()-1, std::ostream_iterator<int>(tags_s, ","));
+        }
+        tags_s << tags.back();
+      }
       frc::SmartDashboard::PutString("tags", tags_s.str());
 
       // Give the output stream a new image to display
