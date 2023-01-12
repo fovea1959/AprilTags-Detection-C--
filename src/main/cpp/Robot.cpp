@@ -108,13 +108,14 @@ class Robot : public frc::TimedRobot {
         // identify the tag
         putText(mat, std::to_string(detection->GetId()), cv::Point(c.x + ll, c.y), cv::FONT_HERSHEY_SIMPLEX, 1, crossColor, 3);
 
-        // determine pose and put into the dashboard
+        // determine pose
         frc::Transform3d pose = estimator.Estimate(*detection);
 
+        // put pose into dashbaord
         std::stringstream dashboardString;
-        dashboardString << "Translation: " << pose.X().value() << "," << pose.Y().value() << "," << pose.Z().value();
+        dashboardString << "Translation: " << units::length::to_string(pose.X()) << ", " << units::length::to_string(pose.Y()) << ", " << units::length::to_string(pose.Z());
         frc::Rotation3d rotation = pose.Rotation();
-        dashboardString << "; Rotation: " << rotation.X().value() << "," << rotation.Y().value() << "," << rotation.Z().value();
+        dashboardString << "; Rotation: " << units::angle::to_string(rotation.X()) << ", " <<  units::angle::to_string(rotation.Y()) << ", " <<  units::angle::to_string(rotation.Z());
         frc::SmartDashboard::PutString("pose_" + std::to_string(detection->GetId()), dashboardString.str());
       }
 
