@@ -4,11 +4,14 @@
 
 #include <cstdio>
 #include <thread>
+#include <span>
+#include <string>
 
 #include <units/length.h>
 
 #include <cameraserver/CameraServer.h>
 #include <frc/apriltag/AprilTagDetector.h>
+#include <frc/apriltag/AprilTagDetection.h>
 #include <frc/apriltag/AprilTagPoseEstimator.h>
 #include <frc/TimedRobot.h>
 #include <opencv2/core/core.hpp>
@@ -77,9 +80,32 @@ class Robot : public frc::TimedRobot {
       cv::Size s = grayMat.size();
       frc::AprilTagDetector::Results detections = detector.Detect (s.width, s.height, grayMat.data);
 
-      // Put a rectangle on the image
-      rectangle(mat, cv::Point(100, 100), cv::Point(400, 400),
-                cv::Scalar(255, 255, 255), 5);
+      for (const frc::AprilTagDetection* detection : detections) {
+        // draw lines around the tag
+        for (int i = 0; i <= 3; i++) {
+          int j = (i + 1) % 4;
+          const frc::AprilTagDetection::Point pti = detection->GetCorner(i);
+          const frc::AprilTagDetection::Point ptj = detection->GetCorner(j);
+          line(mat, cv::Point(pti.x, pti.y), cv::Point(ptj.x, ptj.y), outlineColor, 2);
+        }
+
+        // mark the center of the tag
+        const frc::AprilTagDetection::Point c = detection->GetCenter();
+        int ll = 10;
+        line(mat, cv::Point(c.x - ll, c.y), cv::Point(c.x + ll, c.y), crossColor, 2);
+        line(mat, cv::Point(c.x, c.y - ll), cv::Point(c.x, c.y + ll), crossColor, 2);
+
+        // identify the tag
+        putText(mat, std::to_string(detection->GetId()), cv::Point(c.x + ll, c.y), cv::FONT_HERSHEY_SIMPLEX, 1, crossColor, 3);
+
+        /*
+        Transform3d pose = estimator.estimate(detection);
+        var dashboardString = pose.toString();
+        SmartDashboard.putString("pose_" + detection->getId(), dashboardString);
+        */
+
+      }
+
       // Give the output stream a new image to display
       outputStream.PutFrame(mat);
     }
