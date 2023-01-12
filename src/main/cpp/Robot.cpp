@@ -6,14 +6,18 @@
 #include <thread>
 #include <span>
 #include <string>
+#include <sstream>
 
 #include <units/length.h>
+#include <units/angle.h>
 
 #include <cameraserver/CameraServer.h>
 #include <frc/apriltag/AprilTagDetector.h>
 #include <frc/apriltag/AprilTagDetection.h>
 #include <frc/apriltag/AprilTagPoseEstimator.h>
+#include <frc/geometry/Transform3d.h>
 #include <frc/TimedRobot.h>
+#include <frc/smartdashboard/SmartDashboard.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -59,7 +63,7 @@ class Robot : public frc::TimedRobot {
     cv::Mat grayMat;
 
     // Instantiate once
-    // how to do ArrayList?
+    std::vector<int> tags;
     cv::Scalar outlineColor = cv::Scalar(0, 255, 0);
     cv::Scalar crossColor = cv::Scalar(0, 0, 255);
 
@@ -77,10 +81,16 @@ class Robot : public frc::TimedRobot {
 
       cv::cvtColor(mat, grayMat, cv::COLOR_BGR2GRAY);
 
-      cv::Size s = grayMat.size();
-      frc::AprilTagDetector::Results detections = detector.Detect (s.width, s.height, grayMat.data);
+      cv::Size g_size = grayMat.size();
+      frc::AprilTagDetector::Results detections = detector.Detect (g_size.width, g_size.height, grayMat.data);
+
+      // have not seen any tags yet
+      tags.clear();
 
       for (const frc::AprilTagDetection* detection : detections) {
+        // remember we saw this tag
+        tags.push_back(detection->GetId());
+
         // draw lines around the tag
         for (int i = 0; i <= 3; i++) {
           int j = (i + 1) % 4;
@@ -98,13 +108,22 @@ class Robot : public frc::TimedRobot {
         // identify the tag
         putText(mat, std::to_string(detection->GetId()), cv::Point(c.x + ll, c.y), cv::FONT_HERSHEY_SIMPLEX, 1, crossColor, 3);
 
-        /*
-        Transform3d pose = estimator.estimate(detection);
-        var dashboardString = pose.toString();
-        SmartDashboard.putString("pose_" + detection->getId(), dashboardString);
-        */
+        // determine pose and put into the dashboard
+        frc::Transform3d pose = estimator.Estimate(*detection);
 
+        std::stringstream dashboardString;
+        dashboardString << "Translation: " << std::to_string(pose.X().value()) << "," << std::to_string(pose.Y().value()) << "," << std::to_string(pose.Z().value());
+        frc::Rotation3d rotation = pose.Rotation();
+        //dashboardString << "; Rotation: " << rotation.X()) << "," << std::to_string(rotation.Y()) << "," << std::to_string(rotation.Z());
+        // dashboardString << "; Rotation: " << rotation.X();
+        frc::SmartDashboard::PutString("pose_" + std::to_string(detection->GetId()), dashboardString.str());
       }
+
+      // put list of tags onto dashboard
+      std::stringstream tags_s;
+      std::copy(tags.begin(), tags.end()-1, std::ostream_iterator<int>(tags_s, ","));
+      tags_s << tags.back();
+      frc::SmartDashboard::PutString("tags", tags_s.str());
 
       // Give the output stream a new image to display
       outputStream.PutFrame(mat);
